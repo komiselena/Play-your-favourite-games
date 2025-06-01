@@ -1,3 +1,7 @@
+
+
+/*
+ 
 //
 //  GameScene.swift
 //  TerritoryGame
@@ -18,14 +22,7 @@ struct TerritoryData {
     let id: String
     let borderWidth: CGFloat
     var owner: TerritoryOwner
-    var soldiers: Int {
-        didSet {
-            // Гарантируем, что у игрока всегда на 1 солдата больше
-            if owner == .player && soldiers <= (oldValue - 1) {
-                soldiers = oldValue
-            }
-        }
-    }
+    var soldiers: Int
 }
 
 class TerritoryNode: SKSpriteNode {
@@ -43,8 +40,6 @@ class TerritoryNode: SKSpriteNode {
     private var circleNode: SKShapeNode!
     private var iconNode: SKSpriteNode!
     private var labelNode: SKLabelNode!
-    private var backgroundNode: SKSpriteNode!
-    private var cropNode: SKCropNode!
     
     init(texture: SKTexture?, size: CGSize) {
         super.init(texture: texture, color: .clear, size: size)
@@ -56,35 +51,20 @@ class TerritoryNode: SKSpriteNode {
     }
     
     private func setup() {
-        // Создаем crop node для точного вырезания территории
-        cropNode = SKCropNode()
-        let maskNode = SKSpriteNode(texture: self.texture)
-        maskNode.position = CGPoint(x: 0, y: 0)
-        cropNode.maskNode = maskNode
-        
-        // Настраиваем фон территории (будет виден только внутри маски)
-        backgroundNode = SKSpriteNode(color: .clear, size: self.size)
-        backgroundNode.position = CGPoint(x: 0, y: 0)
-        backgroundNode.zPosition = -1
-        cropNode.addChild(backgroundNode)
-        
-        // Добавляем cropNode к территории
-        self.addChild(cropNode)
-        
-        // Настраиваем круг (центр территории)
+        // Setup circle background (smaller size)
         circleNode = SKShapeNode(circleOfRadius: 15)
         circleNode.position = CGPoint(x: 0, y: 0)
         circleNode.zPosition = 10
         self.addChild(circleNode)
         
-        // Настраиваем иконку
+        // Setup icon (smaller size)
         iconNode = SKSpriteNode()
         iconNode.size = CGSize(width: 20, height: 20)
         iconNode.position = circleNode.position
         iconNode.zPosition = 11
         self.addChild(iconNode)
         
-        // Настраиваем счетчик солдат
+        // Setup label
         labelNode = SKLabelNode()
         labelNode.fontName = "Avenir-Black"
         labelNode.fontSize = 14
@@ -103,13 +83,11 @@ class TerritoryNode: SKSpriteNode {
             circleNode.strokeColor = .clear
             iconNode.texture = SKTexture(imageNamed: "skin1")
             labelNode.fontColor = SKColor(red: 0.91, green: 0.73, blue: 0.28, alpha: 1.0)
-            if soldiers <= 10 { soldiers = 11 }
         case .enemy:
             circleNode.fillColor = .red
             circleNode.strokeColor = .clear
             iconNode.texture = SKTexture(imageNamed: "skin2")
             labelNode.fontColor = .white
-            if soldiers >= 11 { soldiers = 10 }
         case .neutral:
             circleNode.fillColor = .gray
             circleNode.strokeColor = .clear
@@ -123,20 +101,21 @@ class TerritoryNode: SKSpriteNode {
     func updateTerritoryColor() {
         switch owner {
         case .player:
-            backgroundNode.color = SKColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 0.3)
+            self.color = SKColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 0.8)
+            self.colorBlendFactor = 1.0
         case .enemy:
-            backgroundNode.color = SKColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 0.3)
+            self.color = SKColor(red: 1.0, green: 0.0, blue: 0.0, alpha: 0.8)
+            self.colorBlendFactor = 1.0
         case .neutral:
-            backgroundNode.color = SKColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.2)
+            self.color = SKColor(red: 0.5, green: 0.5, blue: 0.5, alpha: 0.5)
+            self.colorBlendFactor = 1.0
         }
-        backgroundNode.colorBlendFactor = 1.0
     }
-    
+
     func updateSoldiersCount() {
         labelNode.text = "\(soldiers)"
     }
 }
-
 
 class GameScene: SKScene {
         
@@ -150,7 +129,9 @@ class GameScene: SKScene {
     private var lastEnemyAIUpdateTime: TimeInterval = 0
     private var isEnemyAIActive: Bool = false
     
+    
     override func didMove(to view: SKView) {
+        
         let background = SKSpriteNode(imageNamed: "bg1")
         background.position = CGPoint(x: size.width / 2, y: size.height / 2)
         background.size = self.size
@@ -196,58 +177,41 @@ class GameScene: SKScene {
         for y in 0..<height {
             for x in 0..<width {
                 let index = (y * width + x) * bytesPerPixel
-                
-                // Пропускаем уже посещенные пиксели и границы
                 if visited.contains(index) || isBorderPixel(at: index, in: pixelData) {
                     continue
                 }
 
-                // Создаем маску для текущей территории
-                var zoneMask = [UInt8](repeating: 0, count: width * height * 4)
+                var zoneMask = [UInt8](repeating: 0, count: totalBytes)
                 let territoryColor = extractTerritoryColor(x: x, y: y, width: width, height: height,
-                                                        originalData: pixelData,
-                                                        visited: &visited,
-                                                        zoneMask: &zoneMask,
-                                                        bytesPerPixel: bytesPerPixel)
+                                                         originalData: &pixelData,
+                                                         visited: &visited,
+                                                         zoneMask: &zoneMask,
+                                                         bytesPerPixel: bytesPerPixel)
 
-                // Создаем изображение территории
                 if let zoneImage = maskToCGImage(mask: zoneMask, width: width, height: height) {
                     let texture = SKTexture(cgImage: zoneImage)
-                    let territoryNode = createTerritoryNode(from: texture, color: territoryColor,
-                                                           width: width, height: height,
-                                                           offset: CGPoint(x: offsetX, y: offsetY))
-                    
-                    // Определяем владельца территории по цвету
-                    if territoryColor.isClose(to: UIColor.blue, tolerance: 0.3) {
-                        territoryNode.owner = .player
-                        territoryNode.soldiers = 11
-                    } else if territoryColor.isClose(to: UIColor.red, tolerance: 0.3) {
-                        territoryNode.owner = .enemy
-                        territoryNode.soldiers = 10
-                    } else {
-                        territoryNode.owner = .neutral
-                        territoryNode.soldiers = 0
-                    }
-                    
-                    territoryNode.updateAppearance()
-                    territoryNodes.append(territoryNode)
-                    addChild(territoryNode)
+                    let territory = createTerritoryNode(from: texture,
+                                                      color: territoryColor,
+                                                      offset: CGPoint(x: offsetX, y: offsetY))
+                    territoryNodes.append(territory)
                 }
             }
         }
 
-        self.territories = territoryNodes
-        print("Создано территорий: \(territoryNodes.count)")
+        for territory in territoryNodes {
+            addChild(territory)
+        }
     }
+
 
     func isBorderPixel(at index: Int, in data: [UInt8]) -> Bool {
         // Белый цвет считается границей
         return data[index] > 200 && data[index+1] > 200 && data[index+2] > 200
     }
-    
+
     func extractTerritoryColor(x: Int, y: Int,
                              width: Int, height: Int,
-                             originalData: [UInt8],
+                             originalData: inout [UInt8],
                              visited: inout Set<Int>,
                              zoneMask: inout [UInt8],
                              bytesPerPixel: Int) -> UIColor {
@@ -263,6 +227,7 @@ class GameScene: SKScene {
 
             visited.insert(index)
 
+            // Запоминаем цвет первого пикселя территории
             if isFirstPixel {
                 let r = originalData[index]
                 let g = originalData[index + 1]
@@ -270,15 +235,22 @@ class GameScene: SKScene {
                 territoryColor = UIColor(red: CGFloat(r)/255.0,
                                        green: CGFloat(g)/255.0,
                                        blue: CGFloat(b)/255.0,
-                                       alpha: 1.0)
+                                       alpha: 0.5) // Полупрозрачный
                 isFirstPixel = false
             }
 
-            // Заполняем маску
-            zoneMask[index] = originalData[index]
-            zoneMask[index + 1] = originalData[index + 1]
-            zoneMask[index + 2] = originalData[index + 2]
-            zoneMask[index + 3] = 255 // Полная непрозрачность
+            // В маске делаем пиксель белым (граница) или прозрачным (внутренность)
+            if isOnBorder(x: cx, y: cy, width: width, height: height, data: originalData, bytesPerPixel: bytesPerPixel) {
+                zoneMask[index] = 255     // R
+                zoneMask[index + 1] = 255 // G
+                zoneMask[index + 2] = 255 // B
+                zoneMask[index + 3] = 255 // A (непрозрачный)
+            } else {
+                zoneMask[index] = 255     // R
+                zoneMask[index + 1] = 255 // G
+                zoneMask[index + 2] = 255 // B
+                zoneMask[index + 3] = 0   // A (прозрачный)
+            }
 
             stack.append((cx + 1, cy))
             stack.append((cx - 1, cy))
@@ -287,61 +259,6 @@ class GameScene: SKScene {
         }
 
         return territoryColor
-    }
-
-    func maskToCGImage(mask: [UInt8], width: Int, height: Int) -> CGImage? {
-        // Просто создаем изображение из маски без дополнительной обработки
-        let bytesPerPixel = 4
-        let bytesPerRow = bytesPerPixel * width
-        
-        
-        guard let ctx = CGContext(data: UnsafeMutableRawPointer(mutating: mask),
-                                 width: width,
-                                 height: height,
-                                 bitsPerComponent: 8,
-                                 bytesPerRow: bytesPerRow,
-                                 space: CGColorSpaceCreateDeviceRGB(),
-                                 bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
-            return nil
-        }
-        
-        return ctx.makeImage()
-    }
-
-    func createTerritoryNode(from texture: SKTexture, color: UIColor, width: Int, height: Int, offset: CGPoint) -> TerritoryNode {
-        // Создаем узел территории с текстурой
-        let territoryNode = TerritoryNode(texture: texture, size: texture.size())
-        territoryNode.territoryId = UUID().uuidString
-        
-        // Позиционируем узел
-        territoryNode.position = CGPoint(
-            x: offset.x + CGFloat(width)/2,
-            y: offset.y + CGFloat(height)/2
-        )
-        
-        // Создаем точную маску для территории
-        let cropNode = SKCropNode()
-        let maskNode = SKSpriteNode(texture: texture)
-        maskNode.position = CGPoint(x: 0, y: 0)
-        cropNode.maskNode = maskNode
-        
-        // Создаем цветной фон территории
-        let backgroundNode = SKSpriteNode(color: .clear, size: texture.size())
-        backgroundNode.colorBlendFactor = 1.0
-        backgroundNode.position = CGPoint(x: 0, y: 0)
-        
-        // Добавляем фон в cropNode
-        cropNode.addChild(backgroundNode)
-        
-        // Добавляем cropNode в territoryNode
-        territoryNode.addChild(cropNode)
-        
-        // Настраиваем физическое тело для точного попадания
-        let physicsBody = SKPhysicsBody(texture: texture, size: texture.size())
-        physicsBody.isDynamic = false
-        territoryNode.physicsBody = physicsBody
-        
-        return territoryNode
     }
 
     func isOnBorder(x: Int, y: Int, width: Int, height: Int, data: [UInt8], bytesPerPixel: Int) -> Bool {
@@ -366,6 +283,34 @@ class GameScene: SKScene {
     }
 
 
+    func createTerritoryNode(from texture: SKTexture, color: UIColor, offset: CGPoint) -> TerritoryNode {
+        let node = TerritoryNode(texture: texture, size: texture.size())
+        node.color = color
+        node.colorBlendFactor = 1.0
+        node.position = CGPoint(x: offset.x + node.size.width/2,
+                               y: offset.y + node.size.height/2)
+        
+        
+        return node
+    }
+
+        func maskToCGImage(mask: [UInt8], width: Int, height: Int) -> CGImage? {
+            let bytesPerPixel = 4
+            let bytesPerRow = bytesPerPixel * width
+
+            guard let ctx = CGContext(data: UnsafeMutableRawPointer(mutating: mask),
+                                      width: width,
+                                      height: height,
+                                      bitsPerComponent: 8,
+                                      bytesPerRow: bytesPerRow,
+                                      space: CGColorSpaceCreateDeviceRGB(),
+                                      bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue) else {
+                return nil
+            }
+
+            return ctx.makeImage()
+        }
+
     func addZoneSprite(from texture: SKTexture, fillColor: UIColor) {
         let zone = SKSpriteNode(texture: texture)
         zone.position = CGPoint(x: size.width / 2, y: size.height / 2)
@@ -379,57 +324,42 @@ class GameScene: SKScene {
     override func touchesBegan(_ touches: Set<UITouch>, with event: UIEvent?) {
         guard let touch = touches.first else { return }
         let location = touch.location(in: self)
-        
-        for node in self.nodes(at: location) {
-            if let territory = node as? TerritoryNode ?? (node as? SKCropNode)?.children.first as? TerritoryNode {
-                if selectedFromTerritory == nil {
-                    // Выбираем исходную территорию (только если она принадлежит игроку и есть солдаты)
-                    if territory.owner == .player && territory.soldiers > 0 {
-                        selectedFromTerritory = territory
-                        animateTerritorySelection(territory, selected: true)
-                    }
-                } else {
-                    // Выбираем целевую территорию (нельзя выбирать ту же самую)
-                    if territory != selectedFromTerritory {
-                        selectedToTerritory = territory
-                        launchAttack(from: selectedFromTerritory!, to: territory)
-                    }
-                    
-                    // Снимаем выделение
-                    if let fromTerritory = selectedFromTerritory {
-                        animateTerritorySelection(fromTerritory, selected: false)
-                    }
+
+        if selectedFromTerritory == nil {
+            for territory in territories {
+                if territory.contains(location) && territory.owner == .player {
+                    selectedFromTerritory = territory
+                    territory.run(SKAction.sequence([
+                        SKAction.scale(to: 1.1, duration: 0.1),
+                        SKAction.repeatForever(
+                            SKAction.sequence([
+                                SKAction.fadeAlpha(to: 0.8, duration: 0.5),
+                                SKAction.fadeAlpha(to: 1.0, duration: 0.5)
+                            ])
+                        )
+                    ]))
+                    return
+                }
+            }
+        } else {
+            for territory in territories {
+                if territory.contains(location) && territory != selectedFromTerritory {
+                    selectedToTerritory = territory
+                    selectedFromTerritory?.removeAllActions()
+                    selectedFromTerritory?.run(SKAction.scale(to: 1.0, duration: 0.1))
+                    launchAttack(from: selectedFromTerritory!, to: selectedToTerritory!)
                     selectedFromTerritory = nil
                     selectedToTerritory = nil
+                    return
                 }
-                break
             }
+            
+            selectedFromTerritory?.removeAllActions()
+            selectedFromTerritory?.run(SKAction.scale(to: 1.0, duration: 0.1))
+            selectedFromTerritory = nil
         }
     }
     
-    
-    private func animateTerritorySelection(_ territory: TerritoryNode, selected: Bool) {
-        if selected {
-            let pulseAction = SKAction.sequence([
-                SKAction.scale(to: 1.1, duration: 0.1),
-                SKAction.repeatForever(
-                    SKAction.sequence([
-                        SKAction.fadeAlpha(to: 0.8, duration: 0.5),
-                        SKAction.fadeAlpha(to: 1.0, duration: 0.5)
-                    ])
-                )
-            ])
-            territory.run(pulseAction, withKey: "pulse")
-        } else {
-            territory.removeAction(forKey: "pulse")
-            territory.run(SKAction.sequence([
-                SKAction.scale(to: 1.0, duration: 0.1),
-                SKAction.fadeAlpha(to: 1.0, duration: 0.1)
-            ]))
-        }
-    }
-
-
     private func launchAttack(from: TerritoryNode, to: TerritoryNode) {
         guard from.soldiers > 0 else { return }
         
@@ -496,34 +426,18 @@ class GameScene: SKScene {
     
     private func resolveAttack(from: TerritoryNode, to: TerritoryNode, soldiers: Int) {
         if to.owner == from.owner {
-            // Укрепление своей территории
             to.soldiers += soldiers
         } else {
-            // Атака вражеской/нейтральной территории
             if soldiers > to.soldiers {
-                // Захват территории
                 to.owner = from.owner
                 to.soldiers = soldiers - to.soldiers
-                
-                // Гарантируем преимущество игрока
-                if to.owner == .player {
-                    to.soldiers = max(to.soldiers, 11)
-                } else if to.owner == .enemy {
-                    to.soldiers = min(to.soldiers, 10)
-                }
-                
                 to.updateAppearance()
             } else {
-                // Неудачная атака
                 to.soldiers -= soldiers
             }
         }
         
-        // Обновляем численность
-        from.soldiers = 0
-        from.updateSoldiersCount()
         to.updateSoldiersCount()
-        
         checkGameEnd()
     }
     
@@ -582,16 +496,4 @@ class GameScene: SKScene {
 }
 
 
-extension UIColor {
-    func isClose(to color: UIColor, tolerance: CGFloat) -> Bool {
-        var r1: CGFloat = 0, g1: CGFloat = 0, b1: CGFloat = 0, a1: CGFloat = 0
-        var r2: CGFloat = 0, g2: CGFloat = 0, b2: CGFloat = 0, a2: CGFloat = 0
-        
-        self.getRed(&r1, green: &g1, blue: &b1, alpha: &a1)
-        color.getRed(&r2, green: &g2, blue: &b2, alpha: &a2)
-        
-        return abs(r1 - r2) <= tolerance &&
-               abs(g1 - g2) <= tolerance &&
-               abs(b1 - b2) <= tolerance
-    }
-}
+*/
