@@ -45,7 +45,8 @@ struct MainMenuView: View {
                                     
                                     NavigationLink {
 //                                        GameContainerView()
-                                        ContentView()
+//                                        ContentView(gameViewModel: gameViewModel)
+                                        LevelView(gameData: gameData, gameViewModel: gameViewModel)
                                     } label: {
                                         ZStack{
                                             Image("buttonBG")
@@ -118,6 +119,8 @@ struct MainMenuView: View {
                                 .frame(width: g.size.width * 0.12, height: g.size.width * 0.12)
 
                         }
+                            .padding(.leading, g.size.height * 0.1)
+
                         ,alignment: .bottomLeading
 
                     )
@@ -138,6 +141,8 @@ struct MainMenuView: View {
                             
                         }
                             .padding(.top, g.size.height * 0.1)
+                            .padding(.trailing, g.size.height * 0.1)
+
 
                         ,alignment: .topTrailing
                     )

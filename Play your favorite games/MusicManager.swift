@@ -48,11 +48,14 @@ class MusicManager: ObservableObject {
     
     func stopMusic() {
         audioPlayer?.stop()
+        musicOn = false
+
         paused = true
     }
     
     func pauseMusic() {
         audioPlayer?.pause()
+        musicOn = false
         paused = true
     }
     
@@ -60,6 +63,8 @@ class MusicManager: ObservableObject {
         guard musicOn else { return }
         audioPlayer?.play()
         paused = false
+        musicOn = true
+
     }
     
     func toggleMusic() {

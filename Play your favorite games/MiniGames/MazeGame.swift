@@ -5,6 +5,13 @@
 //  Created by Mac on 26.04.2025.
 //
 
+//
+//  MazeGame.swift
+//  Lucky Eagle Game
+//
+//  Created by Mac on 26.04.2025.
+//
+
 import Foundation
 import UIKit
 import SpriteKit
@@ -15,22 +22,25 @@ class MazeGameScene: SKScene, ObservableObject {
     
     private var mazeBackground: SKShapeNode!
     private var wallsNode: SKSpriteNode!
-    private var playerNode: SKSpriteNode! // Изменяем тип на SKSpriteNode
-    private var flagNode: SKSpriteNode! // Нода для флага
-    private var trailNodes = [SKShapeNode]() // Массив для следов
+    private var playerNode: SKSpriteNode!
+    private var flagNode: SKSpriteNode!
+    private var trailNodes = [SKShapeNode]()
     private var mazeCGImage: CGImage?
     private let playerRadius: CGFloat = 4
     let moveStep: CGFloat = 3
-    private let startPoint = CGPoint(x: 10, y: 72)
+    private let startPoint = CGPoint(x: 20, y: 73)
     private let exitPoint = CGPoint(x: 186, y: 142)
     var onGameWon: (() -> Void)?
     
     // Настройки следа
     private var trailPathNode: SKShapeNode?
     private var trailPoints = [CGPoint]()
-    private let trailColor = SKColor.red
-    private let trailWidth: CGFloat = 1.5
-    private let trailDashPattern: [CGFloat] = [3, 3] // Длина штриха и пробела
+    private let trailColor = SKColor(hex: "8FC7F9") // Новый цвет следа
+    private let trailWidth: CGFloat = 12.0 // Увеличим ширину следа
+    private let minTrailDistance: CGFloat = 1.5 // Минимальное расстояние между точками следа
+    private let blueSquarePoint = CGPoint(x: 10, y: 72) // Новая позиция для голубого квадратика
+
+    private var blueSquareNode: SKShapeNode? // Нода для голубого квадратика
 
     override func didMove(to view: SKView) {
         mazeBackground = SKShapeNode(rect: CGRect(x: 0, y: 0, width: 196, height: 196))
@@ -40,34 +50,37 @@ class MazeGameScene: SKScene, ObservableObject {
         mazeBackground.position = CGPoint(x: 0, y: 0)
         addChild(mazeBackground)
         
-        // 2. Векторные стены
         wallsNode = SKSpriteNode(imageNamed: "maze")
         wallsNode.anchorPoint = CGPoint(x: 0, y: 0)
         wallsNode.position = CGPoint(x: 0, y: 0)
         wallsNode.size = CGSize(width: 196, height: 196)
         addChild(wallsNode)
         
-        // 3. Флаг в правом нижнем углу
         flagNode = SKSpriteNode(imageNamed: "coin")
         flagNode.anchorPoint = CGPoint(x: 0.5, y: 0.5)
-        flagNode.position = exitPoint // Используем exitPoint
+        flagNode.position = exitPoint
         flagNode.zPosition = 1
         flagNode.size = CGSize(width: 20, height: 20)
         addChild(flagNode)
         
-        // 4. Получаем CGImage для проверки стен
         if let img = UIImage(named: "maze")?.cgImage {
             mazeCGImage = img
         }
         
-        // 5. Создаем игрока с картинкой вместо круга
         playerNode = SKSpriteNode(imageNamed: "skin1")
         playerNode.position = startPoint
         playerNode.zPosition = 2
-        playerNode.size = CGSize(width: playerRadius * 3, height: playerRadius * 3) // Размер картинки
+        playerNode.size = CGSize(width: playerRadius * 3, height: playerRadius * 3)
         addChild(playerNode)
 
-        // 6. Белая рамка вокруг шарика
+        blueSquareNode = SKShapeNode(rectOf: CGSize(width: 10, height: 10))
+        blueSquareNode?.position = blueSquarePoint
+        blueSquareNode?.fillColor = SKColor(hex: "8FC7F9") // Голубой цвет
+        blueSquareNode?.strokeColor = .clear
+        blueSquareNode?.zPosition = 1
+        addChild(blueSquareNode!)
+
+        
         let squareOutline = SKShapeNode(rectOf: CGSize(width: playerRadius*3, height: playerRadius*3))
         squareOutline.strokeColor = .clear
         squareOutline.lineWidth = 1
@@ -75,7 +88,7 @@ class MazeGameScene: SKScene, ObservableObject {
         squareOutline.zPosition = -1
         playerNode.addChild(squareOutline)
         
-        // Инициализируем узел для пути
+        // Инициализируем узел для пути (теперь без пунктира)
         trailPathNode = SKShapeNode()
         trailPathNode?.strokeColor = trailColor
         trailPathNode?.lineWidth = trailWidth
@@ -87,23 +100,18 @@ class MazeGameScene: SKScene, ObservableObject {
 
     func resetGame() {
         playerNode.position = startPoint
-        // Удаляем все следы
         isWon = false
         trailPoints.removeAll()
         updateTrailPath()
     }
     
-    
     func movePlayer(dx: CGFloat, dy: CGFloat) {
         let newPos = CGPoint(x: playerNode.position.x + dx, y: playerNode.position.y + dy)
         
-        // Проверка выхода за пределы лабиринта
         guard mazeBackground.frame.contains(newPos) else { return }
         
-        // Проверка столкновения со стенами
         if isWall(at: newPos) { return }
         
-        // Проверка по точкам вокруг игрока
         let offsets: [CGPoint] = [
             CGPoint(x: playerRadius, y: 0), CGPoint(x: -playerRadius, y: 0),
             CGPoint(x: 0, y: playerRadius), CGPoint(x: 0, y: -playerRadius),
@@ -119,29 +127,24 @@ class MazeGameScene: SKScene, ObservableObject {
             }
         }
         
-        // Обновляем позицию игрока
         playerNode.position = newPos
-        
-        // Добавляем след
         addTrailPoint(at: newPos)
         
-        // Проверка достижения флага
         if playerNode.position.distance(to: flagNode.position) < 15 {
             isWon = true
-            print("is won \(isWon)")
             onGameWon?()
         }
     }
     
     private func addTrailPoint(at position: CGPoint) {
         // Добавляем точку только если она на достаточном расстоянии от предыдущей
-        if let lastPoint = trailPoints.last, position.distance(to: lastPoint) < 2 {
+        if let lastPoint = trailPoints.last, position.distance(to: lastPoint) < minTrailDistance {
             return
         }
         
         trailPoints.append(position)
         
-        // Ограничиваем количество точек, чтобы не перегружать память
+        // Ограничиваем количество точек
         if trailPoints.count > 500 {
             trailPoints.removeFirst(100)
         }
@@ -162,9 +165,8 @@ class MazeGameScene: SKScene, ObservableObject {
             path.addLine(to: point)
         }
         
-        // Создаем пунктирный путь (без проверки if let)
-        let dashedPath = path.copy(dashingWithPhase: 0, lengths: trailDashPattern)
-        trailPathNode?.path = dashedPath
+        // Теперь используем сплошную линию вместо пунктирной
+        trailPathNode?.path = path
     }
 
     private func isWall(at point: CGPoint) -> Bool {
@@ -200,12 +202,11 @@ class MazeGameScene: SKScene, ObservableObject {
         let b = CGFloat(data[pixelIndex + 2]) / 255.0
         
         // Цвет фона #DFA6F2 в RGB: (223, 166, 242)
-        let isBackground = (r >= 0.87 && r <= 0.88) &&  // 223/255 ≈ 0.8745
-                           (g >= 0.65 && g <= 0.66) &&  // 166/255 ≈ 0.6509
-                           (b >= 0.94 && b <= 0.96)     // 242/255 ≈ 0.9490
+        let isBackground = (r >= 0.87 && r <= 0.88) &&
+                           (g >= 0.65 && g <= 0.66) &&
+                           (b >= 0.94 && b <= 0.96)
         let playerColor = (r == 0.0 && g == 0.0 && b == 0.0)
         
-    
         let isBrownWall = (r >= 0.62 && r <= 0.64) &&
                           (g >= 0.44 && g <= 0.46) &&
                           (b >= 0.20 && b <= 0.22)
@@ -216,22 +217,17 @@ class MazeGameScene: SKScene, ObservableObject {
         
         let isBrownColor1 = (r >= 0.62 && r <= 0.64) && (g >= 0.44 && g <= 0.46) && (b >= 0.20 && b <= 0.22)
         let isBrownColor2 = (r >= 0.72 && r <= 0.74) && (g >= 0.47 && g <= 0.49) && (b >= 0.10 && b <= 0.12)
-        let isBrownColor3 = (r >= 0.52 && r <= 0.54) && (g >= 0.45 && g <= 0.48) && (b >= 0.24 && b <= 0.26) // R:0.533, G:0.466, B:0.247
-        let isBrownColor4 = (r >= 0.79 && r <= 0.81) && (g >= 0.54 && g <= 0.56) && (b >= 0.14 && b <= 0.16) // R:0.803, G:0.549, B:0.149
+        let isBrownColor3 = (r >= 0.52 && r <= 0.54) && (g >= 0.45 && g <= 0.48) && (b >= 0.24 && b <= 0.26)
+        let isBrownColor4 = (r >= 0.79 && r <= 0.81) && (g >= 0.54 && g <= 0.56) && (b >= 0.14 && b <= 0.16)
         
-        // 5. Голубые/синие цвета
         let isLightBlueColor1 = (r >= 0.48 && r <= 0.50) && (g >= 0.78 && g <= 0.80) && (b >= 0.99 && b <= 1.01)
-        let isLightBlueColor2 = (r >= 0.49 && r <= 0.51) && (g >= 0.77 && g <= 0.79) && (b >= 0.94 && b <= 0.96) // R:0.513, G:0.780, B:0.949
+        let isLightBlueColor2 = (r >= 0.49 && r <= 0.51) && (g >= 0.77 && g <= 0.79) && (b >= 0.94 && b <= 0.96)
         let isLightBlueColor3 = (r >= 0.48 && r <= 0.50) && (g >= 0.79 && g <= 0.81) && (b >= 0.99 && b <= 1.01)
 
-        print("Color at \(point): R:\(r) G:\(g) B:\(b)")
         return !isBackground && !playerColor && !isBluePath && !isBrownWall && !isLightBlueColor1 && !isBrownColor1 && !isLightBlueColor2 && !isBrownColor2 && !isLightBlueColor3 && !isBrownColor3 && !isBrownColor4
     }
-    
-    
 }
 
-// Расширение для вычисления расстояния между точками
 extension CGPoint {
     func distance(to point: CGPoint) -> CGFloat {
         return hypot(x - point.x, y - point.y)
@@ -256,4 +252,3 @@ extension UIColor {
         self.init(red: red, green: green, blue: blue, alpha: alpha)
     }
 }
-
