@@ -51,14 +51,14 @@ class TerritoryNode: SKSpriteNode {
     
     fileprivate var isSelected = false {
         didSet {
-            if isSelected {
-                let scaleUp = SKAction.scale(to: 1.05, duration: 0.1)
-                run(scaleUp, withKey: "selectionScale")
-            } else {
-                let scaleDown = SKAction.scale(to: 1.0, duration: 0.1)
-                run(scaleDown)
-                removeAction(forKey: "selectionScale")
-            }
+//            if isSelected {
+//                let scaleUp = SKAction.scale(to: 1.05, duration: 0.1)
+//                run(scaleUp, withKey: "selectionScale")
+//            } else {
+//                let scaleDown = SKAction.scale(to: 1.0, duration: 0.1)
+//                run(scaleDown)
+//                removeAction(forKey: "selectionScale")
+//            }
         }
     }
     

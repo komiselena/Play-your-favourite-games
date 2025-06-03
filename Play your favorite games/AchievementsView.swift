@@ -11,6 +11,7 @@ struct AchievementsView: View {
     @ObservedObject var gameData: GameData
     @ObservedObject var gameViewModel: GameViewModel
     @Environment(\.dismiss) var dismiss
+    @State private var showAchButton = true
     
     var body: some View {
         GeometryReader { g in
@@ -80,25 +81,33 @@ struct AchievementsView: View {
                                 Text("CAPTURE \nTHE FIRST \nTERRITORY")
                                     .foregroundStyle(Color(UIColor(hex: "#DDB355")))
                                     .font(.title3.weight(.bold))
-                                ZStack{
-                                    Image("buttonBG")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: g.size.width * 0.2, height: g.size.height * 0.12)
-                                    HStack{
-                                        Text("CLAIM")
-                                            .foregroundStyle(Color(UIColor(hex: "#DDB355")))
-                                            .font(.caption.weight(.bold))
-                                        Image("coin")
-                                            .resizable()
-                                            .scaledToFit()
-                                            .frame(width: g.size.width * 0.03, height: g.size.width * 0.03)
-                                        Text("10")
-                                            .foregroundStyle(Color(UIColor(hex: "#DDB355")))
-                                            .font(.caption.weight(.bold))
-
+                                Button {
+                                    gameData.coins += 10
+                                    showAchButton = false
+                                } label: {
+                                    if showAchButton {
+                                        ZStack{
+                                            Image("buttonBG")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: g.size.width * 0.2, height: g.size.height * 0.12)
+                                            HStack{
+                                                Text("CLAIM")
+                                                    .foregroundStyle(Color(UIColor(hex: "#DDB355")))
+                                                    .font(.caption.weight(.bold))
+                                                Image("coin")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: g.size.width * 0.03, height: g.size.width * 0.03)
+                                                Text("10")
+                                                    .foregroundStyle(Color(UIColor(hex: "#DDB355")))
+                                                    .font(.caption.weight(.bold))
+                                                
+                                            }
+                                            .frame(width: g.size.width * 0.18, height: g.size.height * 0.1)
+                                            
+                                        }
                                     }
-                                    .frame(width: g.size.width * 0.18, height: g.size.height * 0.1)
 
                                 }
                                 

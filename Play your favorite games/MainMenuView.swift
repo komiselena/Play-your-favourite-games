@@ -13,6 +13,10 @@ struct MainMenuView: View {
     @StateObject private var gameViewModel = GameViewModel()
     @State private var selectedTab: Int = 0
     
+    var isiPad: Bool {
+        UIDevice.current.userInterfaceIdiom == .pad
+    }
+
     var body: some View {
         if #available(iOS 16.0, *) {
             NavigationStack {
@@ -29,7 +33,7 @@ struct MainMenuView: View {
                                     .scaledToFill()
                                     .frame(width: g.size.width * 0.4, height: g.size.height * 0.7)
                                     .padding(.leading, g.size.width * 0.7)
-                                    .padding(.top, g.size.height * 0.2)
+                                    .padding(.top, isiPad ? g.size.height * 0.4 : g.size.height * 0.2)
                                 
                             }
                         }
@@ -162,7 +166,7 @@ struct MainMenuView: View {
                                     .foregroundStyle(.white)
                                     .font(.title3.weight(.bold))
                             }
-                            .padding(.trailing, g.size.width * 0.05)
+                            .padding(.trailing, isiPad ? g.size.width * 0.1 : g.size.width * 0.05)
                         }
                             .padding(.top, g.size.height * 0.1)
 
