@@ -816,28 +816,82 @@ class GameScene: SKScene {
     }
         
     private func showGameOver(winner: TerritoryOwner) {
-        let gameOverNode = SKSpriteNode(color: .black.withAlphaComponent(0.7), size: size)
+        // Создаем размытый фон
+        let blurEffect = SKEffectNode()
+        let blurFilter = CIFilter(name: "CIGaussianBlur")!
+        blurFilter.setValue(10.0, forKey: "inputRadius")
+        blurEffect.filter = blurFilter
+        blurEffect.position = CGPoint(x: size.width/2, y: size.height/2)
+        blurEffect.zPosition = 99
+        addChild(blurEffect)
+        
+        // Добавляем оригинальное изображение с размытием
+        let bgImage = SKSpriteNode(imageNamed: gameViewModel?.backgroundImage ?? "bg1")
+        bgImage.size = self.size
+        bgImage.position = CGPoint(x: size.width/2, y: size.height/2)
+        blurEffect.addChild(bgImage)
+        
+        // Затемнение
+        let darkOverlay = SKSpriteNode(color: .black, size: size)
+        darkOverlay.alpha = 0.5
+        darkOverlay.position = CGPoint(x: size.width/2, y: size.height/2)
+        darkOverlay.zPosition = 100
+        addChild(darkOverlay)
+        
+        // Основной контейнер
+        let gameOverNode = SKNode()
         gameOverNode.position = CGPoint(x: size.width/2, y: size.height/2)
-        gameOverNode.zPosition = 100
+        gameOverNode.zPosition = 101
         addChild(gameOverNode)
         
-        let message = SKLabelNode(text: winner == .player ? "VICTORY!" : "DEFEAT!")
+        // Надпись победы/поражения
+        let message = SKLabelNode(text: winner == .player ? "YOU WIN!" : "YOU LOSE!")
         message.fontName = "Avenir-Black"
         message.fontSize = 60
-        message.fontColor = winner == .player ?
-            SKColor(red: 0.0, green: 0.5, blue: 1.0, alpha: 1.0) : .red
-        message.position = CGPoint(x: 0, y: 20)
-        message.zPosition = 101
+        message.fontColor = .white
+        message.position = CGPoint(x: 0, y: 80)
         gameOverNode.addChild(message)
         
-        let restartButton = SKLabelNode(text: "Tap to Restart")
-        restartButton.fontName = "Avenir-Medium"
-        restartButton.fontSize = 30
-        restartButton.fontColor = .white
-        restartButton.position = CGPoint(x: 0, y: -50)
-        restartButton.zPosition = 101
-        restartButton.name = "restart"
-        gameOverNode.addChild(restartButton)
+        // Кнопка
+        let button = SKSpriteNode(imageNamed: "buttonBG")
+        button.size = CGSize(width: 200, height: 80)
+        button.position = CGPoint(x: 0, y: -40)
+        button.name = winner == .player ? "take" : "back"
+        gameOverNode.addChild(button)
+        
+        // Текст на кнопке - теперь точно по центру
+        let buttonText = SKLabelNode(text: winner == .player ? "TAKE" : "BACK")
+        buttonText.fontName = "Avenir-Black"
+        buttonText.fontSize = 30
+        buttonText.fontColor = .white
+        buttonText.position = CGPoint(x: 0, y: 0) // Центрируем относительно кнопки
+        buttonText.verticalAlignmentMode = .center
+        buttonText.horizontalAlignmentMode = .center
+        buttonText.name = button.name
+        button.addChild(buttonText) // Добавляем текст как дочерний элемент кнопки
+        
+        // Анимация только для надписи (без анимации кнопки)
+        let scaleUp = SKAction.scale(to: 1.1, duration: 0.5)
+        let scaleDown = SKAction.scale(to: 0.9, duration: 0.5)
+        let pulse = SKAction.sequence([scaleUp, scaleDown])
+        message.run(SKAction.repeatForever(pulse))
+    }
+
+    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
+        guard let touch = touches.first else { return }
+        let location = touch.location(in: self)
+        
+        let touchedNodes = nodes(at: location)
+        for node in touchedNodes {
+            if node.name == "take" {
+                // Добавляем 20 очков и закрываем экран
+                gameData?.addCoins(20)
+                dismissAction?()
+            } else if node.name == "back" {
+                // Просто закрываем экран
+                dismissAction?()
+            }
+        }
     }
     
     private func checkGameEnd() {
@@ -857,67 +911,43 @@ class GameScene: SKScene {
         } else if enemyCount == 0 {
             // Уровень пройден
             gameViewModel?.completeLevel(gameViewModel?.currentLevel ?? 1)
-            showVictory()
+            showGameOver(winner: .player)
         }
     }
     
-    private func showVictory() {
-        let victoryNode = SKSpriteNode(color: .black.withAlphaComponent(0.7), size: size)
-        victoryNode.position = CGPoint(x: size.width/2, y: size.height/2)
-        victoryNode.zPosition = 100
-        addChild(victoryNode)
-        
-        // Добавляем картинку бара
-        let barImage = SKSpriteNode(imageNamed: "bar")
-        barImage.size = CGSize(width: size.width * 0.8, height: size.height * 0.7)
-        barImage.position = CGPoint(x: 0, y: 0)
-        barImage.zPosition = 101
-        victoryNode.addChild(barImage)
-        
-        // Добавляем надпись "YOU WIN!" золотого цвета
-        let winLabel = SKLabelNode(text: "YOU WIN!")
-        winLabel.fontName = "Avenir-Black"
-        winLabel.fontSize = 60
-        winLabel.fontColor = SKColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // Золотой цвет
-        winLabel.position = CGPoint(x: 0, y: 50)
-        winLabel.zPosition = 102
-        victoryNode.addChild(winLabel)
-        
-        // Добавляем кнопку "Назад"
-        let backButton = SKLabelNode(text: "Back")
-        backButton.fontName = "Avenir-Medium"
-        backButton.fontSize = 30
-        backButton.fontColor = .white
-        backButton.position = CGPoint(x: 0, y: -50)
-        backButton.zPosition = 102
-        backButton.name = "back"
-        victoryNode.addChild(backButton)
-        
-        // Анимация для надписи
-        let scaleUp = SKAction.scale(to: 1.1, duration: 0.5)
-        let scaleDown = SKAction.scale(to: 0.9, duration: 0.5)
-        let pulse = SKAction.sequence([scaleUp, scaleDown])
-        winLabel.run(SKAction.repeatForever(pulse))
-    }
+//    private func showVictory() {
+//        let victoryNode = SKSpriteNode(color: .black.withAlphaComponent(0.7), size: size)
+//        victoryNode.position = CGPoint(x: size.width/2, y: size.height/2)
+//        victoryNode.zPosition = 100
+//        addChild(victoryNode)
+//        
+//        
+//        // Добавляем надпись "YOU WIN!" золотого цвета
+//        let winLabel = SKLabelNode(text: "YOU WIN!")
+//        winLabel.fontName = "Avenir-Black"
+//        winLabel.fontSize = 60
+//        winLabel.fontColor = SKColor(red: 1.0, green: 0.84, blue: 0.0, alpha: 1.0) // Золотой цвет
+//        winLabel.position = CGPoint(x: 0, y: 50)
+//        winLabel.zPosition = 102
+//        victoryNode.addChild(winLabel)
+//        
+//        // Добавляем кнопку "Назад"
+//        let backButton = SKLabelNode(text: "Back")
+//        backButton.fontName = "Avenir-Medium"
+//        backButton.fontSize = 30
+//        backButton.fontColor = .white
+//        backButton.position = CGPoint(x: 0, y: -50)
+//        backButton.zPosition = 102
+//        backButton.name = "back"
+//        victoryNode.addChild(backButton)
+//        
+//        // Анимация для надписи
+//        let scaleUp = SKAction.scale(to: 1.1, duration: 0.5)
+//        let scaleDown = SKAction.scale(to: 0.9, duration: 0.5)
+//        let pulse = SKAction.sequence([scaleUp, scaleDown])
+//        winLabel.run(SKAction.repeatForever(pulse))
+//    }
     
-    override func touchesEnded(_ touches: Set<UITouch>, with event: UIEvent?) {
-        guard let touch = touches.first else { return }
-        let location = touch.location(in: self)
-        
-        let touchedNodes = nodes(at: location)
-        for node in touchedNodes {
-            if node.name == "restart" {
-                view?.presentScene(GameScene(size: size))
-            } else if node.name == "nextLevel" {
-                gameViewModel?.nextLevel()
-                view?.presentScene(GameScene(size: size))
-            } else if node.name == "back" {
-                // Вернуться на предыдущий экран
-                dismissAction?()
-
-            }
-        }
-    }
 
     // MARK: - Вспомогательные методы для обработки изображения
     

@@ -41,17 +41,6 @@ struct ContentView: View {
                             .scaledToFit()
                             .frame(width: isiPad ? g.size.width * 0.25 : g.size.width * 0.3,
                                    height: isiPad ? g.size.height * 0.7 : g.size.height * 0.78)
-                        VStack(spacing: isiPad ? g.size.height * 0.02 : g.size.height * 0.03) {
-                            Text("ARMY GENERATION")
-                                .foregroundStyle(Color(UIColor(hex: "#8FC7F9")))
-                                .font(isiPad ? .headline : .caption.weight(.bold))
-                            Text("Each area automatically generates soldiers. The more areas you control, the stronger your army")
-                                .textCase(.uppercase)
-                                .foregroundStyle(Color(UIColor(hex: "#DDB355")))
-                                .font(isiPad ? .headline : .caption.weight(.bold))
-                        }
-                        .frame(width: isiPad ? g.size.width * 0.18 : g.size.width * 0.2,
-                               height: isiPad ? g.size.height * 0.45 : g.size.height * 0.5)
                     }
                     .padding(.top, isiPad ? g.size.height * 0.25 : g.size.height * 0.3)
                     .frame(width: isiPad ? g.size.width * 0.18 : g.size.width * 0.2,
@@ -76,14 +65,11 @@ struct ContentView: View {
                 Button {
                     dismiss()
                 } label: {
-                    Image(systemName: "xmark")
-                        .foregroundStyle(.white)
-                        .font(.title.weight(.bold))
-                        .padding(5)
-                        .background {
-                            Circle()
-                                .foregroundStyle(.red)
-                        }
+                    Image("arrow")
+                        .resizable()
+                        .scaledToFit()
+                        .rotationEffect(Angle(degrees: -90))
+                        .frame(width: g.size.width * 0.1, height: g.size.height * 0.1)
                 }
                 .padding(.top, isiPad ? g.size.height * 0.08 : g.size.height * 0.1)
                 .padding(.leading, isiPad ? g.size.height * 0.08 : g.size.height * 0.1)

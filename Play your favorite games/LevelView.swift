@@ -17,7 +17,9 @@ struct LevelView: View {
     let columns = [
         GridItem(.flexible()),
         GridItem(.flexible()),
+        GridItem(.flexible()),
         GridItem(.flexible())
+
     ]
     
     var body: some View {
@@ -26,70 +28,51 @@ struct LevelView: View {
                 Image(gameViewModel.backgroundImage)
                     .resizable()
                     .ignoresSafeArea()
-                
+                    .blur(radius: 5)
+
                 VStack {
                     HStack(spacing: 0) {
                         Button {
                             dismiss()
                         } label: {
-                            Image(systemName: "xmark")
-                                .foregroundStyle(.white)
-                                .font(.title.weight(.bold))
-                                .padding(5)
-                                .background {
-                                    Circle()
-                                        .foregroundStyle(.red)
-                                }
+                            Image("arrow")
+                                .resizable()
+                                .scaledToFit()
+                                .rotationEffect(Angle(degrees: -90))
+                                .frame(width: g.size.width * 0.15, height: g.size.height * 0.15)
                         }
                         
                         Spacer()
                         
                         Text("LEVELS")
                             .foregroundStyle(.white)
-                            .font(.title.weight(.bold))
+                            .font(.largeTitle.weight(.bold))
                         
                         Spacer()
                         
-                        // Невидимая кнопка для балансировки
-                        Button {} label: {
-                            Image(systemName: "xmark")
-                                .foregroundStyle(.clear)
-                                .font(.title.weight(.bold))
-                                .padding(5)
-                                .background {
-                                    Circle()
-                                        .foregroundStyle(.clear)
-                                }
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image("arrow")
+                                .resizable()
+                                .scaledToFit()
+                                .rotationEffect(Angle(degrees: -90))
+                                .frame(width: g.size.width * 0.15, height: g.size.height * 0.15)
+                                .opacity(0.0)
                         }
                     }
                     .padding(.top, g.size.height * 0.1)
-                    .frame(height: g.size.height * 0.1)
+                    .frame(width: g.size.width, height: g.size.height * 0.1)
+
                     
                     Spacer()
                     
                     // Панель информации
-                    ZStack {
-                        Image("bar")
-                            .resizable()
-                            .scaledToFill()
-                            .frame(width: g.size.width * 0.8, height: g.size.height * 0.7)
 
                         VStack(spacing: 5) {
-                            Text("CURRENT LEVEL")
-                                .foregroundStyle(Color(UIColor(hex: "#8FC7F9")))
-                                .font(.caption.weight(.bold))
-                            
-                            Text("\(gameViewModel.currentLevel)")
-                                .foregroundStyle(.white)
-                                .font(.title.weight(.bold))
-                            
-                            Text("UNLOCKED: \(gameViewModel.unlockedLevels)/6")
-                                .foregroundStyle(Color(UIColor(hex: "#DDB355")))
-                                .font(.caption.weight(.bold))
-                            
                             // Сетка уровней
                             LazyVGrid(columns: columns, spacing: 20) {
-                                ForEach(1..<7) { level in
+                                ForEach(1..<9) { level in
                                     Button {
                                         if level <= gameViewModel.unlockedLevels {
                                             selectedLevel = level
@@ -99,14 +82,13 @@ struct LevelView: View {
                                         }
                                     } label: {
                                         ZStack {
-                                            Circle()
-                                                .foregroundStyle(level <= gameViewModel.unlockedLevels ?
-                                                               Color(UIColor(hex: "#8FC7F9")) : Color.gray)
-                                                .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
-                                                .shadow(color: .white.opacity(0.5), radius: 10)
+                                            Image("card")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: g.size.width * 0.23, height: g.size.height * 0.23)
                                             
                                             Text("\(level)")
-                                                .font(.system(size: 30, weight: .bold))
+                                                .font(.system(size: 40, weight: .bold))
                                                 .foregroundColor(.white)
                                             
                                             if level > gameViewModel.unlockedLevels {
@@ -120,7 +102,6 @@ struct LevelView: View {
                                 }
                             }
                             .padding(.horizontal)
-                        }
                     }
                 }
                 .frame(width: g.size.width * 0.9, height: g.size.height * 0.9)

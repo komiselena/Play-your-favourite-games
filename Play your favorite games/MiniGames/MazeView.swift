@@ -34,160 +34,154 @@ struct MazeView: View {
                 Image(gameViewModel.backgroundImage)
                     .resizable()
                     .scaledToFill()
+                    .blur(radius: 5)
                     .ignoresSafeArea()
-                
-                
-                ZStack{
-                    Image("bar")
-                        .resizable()
-                        .scaledToFill()
-                        .frame(width:  g.size.width * 0.8, height: g.size.height * 0.7)
-
-
-                    if scene.isWon {
-                        ZStack{
-                            Image(gameViewModel.backgroundImage)
+                VStack{
+                    HStack(spacing: 0) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image("arrow")
                                 .resizable()
-                                .ignoresSafeArea()
-                            ZStack{
+                                .scaledToFit()
+                                .rotationEffect(Angle(degrees: -90))
+                                .frame(width: g.size.width * 0.15, height: g.size.height * 0.15)
+                        }
+                        
+                        Spacer()
+                        
+                        Text("FIND A WAY TO THE CUP")
+                            .foregroundStyle(.white)
+                            .font(.title.weight(.bold))
+                        
+                        Spacer()
+                        
+                        ZStack {
+                            Image("buttonBG")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: g.size.width * 0.17, height: g.size.height * 0.17)
+                            
+                            HStack(spacing: 5) {
+                                Image("coin")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.03, height: g.size.width * 0.03)
+                                
+                                Text("\(gameData.coins)")
+                                    .foregroundStyle(.white)
+                                    .font(.title3.weight(.bold))
+                            }
+                            .frame(width: g.size.width * 0.17, height: g.size.height * 0.17)
+                        }
+                    }
+                    .padding(.top, g.size.height * 0.1)
+                    .frame(width: g.size.width, height: g.size.height * 0.1)
+                    
+                    Spacer()
+                    
+                    ZStack{
+                        if scene.isWon {
+                                ZStack{
                                     RoundedRectangle(cornerRadius: 18)
                                         .foregroundStyle(.black)
                                         .opacity(0.3)
                                         .frame(width: g.size.width * 0.7, height: g.size.height * 0.7)
-
-                                VStack(){
-                                    Image("stars")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: g.size.width * 0.4, height: g.size.height * 0.3)
                                     
-                                    Text("You Win!")
-                                        .foregroundStyle(.white)
-                                        .font(.title)
-                                    HStack{
-                                        Button {
-                                            dismiss()
-                                        } label: {
-                                            Circle()
-                                                .foregroundStyle(.red)
-                                                .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
-                                            Image(systemName: "house")
-                                                .font(.title)
-                                                .foregroundStyle(.white)
+                                    VStack(){
+                                        Image("stars")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: g.size.width * 0.4, height: g.size.height * 0.3)
+                                        
+                                        Text("You Win!")
+                                            .foregroundStyle(.white)
+                                            .font(.title)
+                                        HStack{
+                                            Button {
+                                                dismiss()
+                                            } label: {
+                                                Circle()
+                                                    .foregroundStyle(.red)
+                                                    .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+                                                Image(systemName: "house")
+                                                    .font(.title)
+                                                    .foregroundStyle(.white)
+                                                
+                                            }
                                             
                                         }
-                                        
                                     }
+                                    .frame(width: g.size.width * 0.6, height: g.size.height * 0.55)
                                 }
-                                .frame(width: g.size.width * 0.6, height: g.size.height * 0.55)
-                            }
+                                
+                        } else{
                             
-                        }
-                    } else{
-                        
-                        HStack(spacing: 30){
-                            Spacer()
-                            SpriteView(scene: scene)
-                                .frame(width: g.size.width * 0.32, height: g.size.width * 0.32)
-                            
-                            Spacer()
-                            VStack(spacing: 0){
-                                // up
-                                Button(action: { scene.movePlayer(dx: 0, dy: scene.moveStep) }) {
-                                    ZStack{
-                                        RoundedRectangle(cornerRadius: 8)
-                                            .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
-                                            .foregroundStyle(Color(UIColor(hex: "#8FC7F9")))
-
-                                        Image(systemName: "arrowtriangle.up.fill")
-                                            .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                            .font(.title.weight(.bold))
-                                        
-                                        
-                                    }
+                            HStack(spacing: 30){
+                                ZStack{
+                                    RoundedRectangle(cornerRadius: 18)
+                                        .fill(Color(UIColor(hex: "#746931")))
+                                        .frame(width: g.size.width * 0.6, height: g.size.height * 0.6)
+                                    SpriteView(scene: scene)
+                                        .frame(width: g.size.width * 0.28, height: g.size.width * 0.28)
+                                    
                                 }
-                                HStack(spacing: 0) {
-                                    //left
-                                    Button(action: { scene.movePlayer(dx: -scene.moveStep, dy: 0) }) {
-                                        ZStack{
-                                            RoundedRectangle(cornerRadius: 8)
+                                
+                                Spacer()
+                                VStack(spacing: 0){
+                                    // up
+                                    Button(action: { scene.movePlayer(dx: 0, dy: scene.moveStep) }) {
+                                            Image("arrow")
+                                                .resizable()
+                                                .scaledToFit()
                                                 .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
-                                                .foregroundStyle(Color(UIColor(hex: "#8FC7F9")))
-
-                                            Image(systemName: "arrowtriangle.left.fill")
-                                                .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                                .font(.title.weight(.bold))
                                             
-                                            
+                                    }
+                                    HStack(spacing: 0) {
+                                        //left
+                                        Button(action: { scene.movePlayer(dx: -scene.moveStep, dy: 0) }) {
+                                            Image("arrow")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .rotationEffect(Angle(degrees: -90))
+                                                .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
+                                        }
+                                        //down opacity 0.0
+                                        Button(action: {  }) {
+                                            Image("arrow")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .rotationEffect(Angle(degrees: 180))
+                                                .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
+                                                .opacity(0.0)
+                                        }
+                                        // right
+                                        Button(action: { scene.movePlayer(dx: scene.moveStep, dy: 0) }) {
+                                            Image("arrow")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .rotationEffect(Angle(degrees: 90))
+                                                .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
                                         }
                                     }
                                     //down
-                                    Button(action: {  }) {
-                                        ZStack{
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
-                                                .opacity(0.0)
-
-                                            Image(systemName: "arrowtriangle.down.fill")
-                                                .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                                .font(.title.weight(.bold))
-                                            
-                                            
-                                        }
-                                    }
-                                    // right
-                                    Button(action: { scene.movePlayer(dx: scene.moveStep, dy: 0) }) {
-                                        ZStack{
-                                            RoundedRectangle(cornerRadius: 8)
-                                                .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
-                                                .foregroundStyle(Color(UIColor(hex: "#8FC7F9")))
-
-                                            Image(systemName: "arrowtriangle.right.fill")
-                                                .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                                .font(.title.weight(.bold))
-                                            
-                                            
-                                        }
-                                    }
-                                }
-                                Button(action: { scene.movePlayer(dx: 0, dy: -scene.moveStep) }) {
-                                    ZStack{
-                                        RoundedRectangle(cornerRadius: 8)
+                                    Button(action: { scene.movePlayer(dx: 0, dy: -scene.moveStep) }) {
+                                        Image("arrow")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .rotationEffect(Angle(degrees: 180))
                                             .frame(width: g.size.width * 0.08 , height: g.size.width * 0.08)
-                                            .foregroundStyle(Color(UIColor(hex: "#8FC7F9")))
-
-                                        Image(systemName: "arrowtriangle.down.fill")
-                                            .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                            .font(.title.weight(.bold))
-                                        
-                                        
                                     }
+                                    
                                 }
-
+                                
+                                Spacer()
+                                
                             }
-                            
-                            Spacer()
-                            
                         }
+                        
                     }
-                    
                 }
-                .overlay(
-                    Button{
-                        dismiss()
-                    } label: {
-                        Image(systemName: "xmark")
-                            .foregroundStyle(.white)
-                            .font(.title.weight(.bold))
-                            .padding(5)
-                            .background {
-                                Circle()
-                                    .foregroundStyle(.red)
-                            }
-                    }
-                    
-                    ,alignment: .topTrailing
-                )
 
                 .frame(width: g.size.width * 0.9, height: g.size.height * 0.9)
                 

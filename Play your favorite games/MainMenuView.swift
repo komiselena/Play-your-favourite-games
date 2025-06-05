@@ -18,93 +18,144 @@ struct MainMenuView: View {
     }
 
     var body: some View {
-        if #available(iOS 16.0, *) {
             NavigationStack {
                 GeometryReader { g in
                     ZStack(alignment: .bottom) {
                         ZStack{
                             Image(gameViewModel.backgroundImage)
                                 .resizable()
-                            
+                                .blur(radius: 5)
+
                                 .ignoresSafeArea()
                             HStack{
                                 Image("inde")
                                     .resizable()
                                     .scaledToFill()
-                                    .frame(width: g.size.width * 0.4, height: g.size.height * 0.7)
-                                    .padding(.leading, g.size.width * 0.7)
-                                    .padding(.top, isiPad ? g.size.height * 0.4 : g.size.height * 0.2)
-                                
+                                    .frame(width: g.size.width * 0.65, height: g.size.height * 0.7)
+                                    .padding(.leading, g.size.width * 0.5)
+                                    .padding(.top, g.size.height * 0.2)
+
                             }
+                            HStack {
+                                Image("inde")
+                                    .resizable()
+                                    .scaledToFill()
+                                    .frame(width: g.size.width * 0.65, height: g.size.height * 0.7)
+                                    .padding(.trailing, g.size.width )
+                                    .padding(.top, g.size.height * 0.2)
+                            }
+
                         }
                         .frame(width: g.size.width, height: g.size.height)
 
                         HStack{
                             VStack{
-                                Image("icon")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: g.size.width * 0.12, height: g.size.width * 0.12)
-                                VStack{
+                                ZStack {
+                                    Image("buttonBG")
+                                        .resizable()
+                                        .scaledToFit()
+                                        .frame(width: g.size.width * 0.17, height: g.size.height * 0.17)
                                     
-                                    NavigationLink {
-//                                        GameContainerView()
-//                                        ContentView(gameViewModel: gameViewModel)
-                                        LevelView(gameData: gameData, gameViewModel: gameViewModel)
-                                    } label: {
-                                        ZStack{
-                                            Image("buttonBG")
-                                                .resizable()
-                                                .scaledToFit()
-                                                .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.2 : 0.25), height: g.size.height * (UIDevice.current.userInterfaceIdiom == .pad ? 0.18 : 0.21))
-                                                Text("PLAY")
-                                                    .textCase(.uppercase)
-                                                    .foregroundStyle(Color(UIColor(hex: "#DDB355")))
-                                                    .font(.title.weight(.bold))
-
-                                        }
-                                        .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.2 : 0.25), height: g.size.height * (UIDevice.current.userInterfaceIdiom == .pad ? 0.18 : 0.21))
-
+                                    HStack(spacing: 5) {
+                                        Image("coin")
+                                            .resizable()
+                                            .scaledToFit()
+                                            .frame(width: g.size.width * 0.03, height: g.size.width * 0.03)
+                                        
+                                        Text("\(gameData.coins)")
+                                            .foregroundStyle(.white)
+                                            .font(.title3.weight(.bold))
                                     }
-                                    
-                                    HStack(spacing: g.size.width * 0.1){
+                                    .frame(width: g.size.width * 0.17, height: g.size.height * 0.17)
+                                }
+                                Spacer()
+
+                                HStack(spacing: 0){
+                                    VStack{
                                         NavigationLink {
-                                            AchievementsView(gameData: gameData, gameViewModel: gameViewModel)
+                                            MiniGamesView(gameData: gameData, gameViewModel: gameViewModel)
                                         } label: {
                                             ZStack{
-                                                Image("buttonBG")
+                                                Image("card")
                                                     .resizable()
                                                     .scaledToFit()
-                                                    .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.2 : 0.25), height: g.size.height * (UIDevice.current.userInterfaceIdiom == .pad ? 0.18 : 0.21))
-                                                    Text("ACHIEVES")
-                                                        .textCase(.uppercase)
-                                                        .foregroundStyle(Color(UIColor(hex: "#DDB355")))
-                                                        .font(.title.weight(.bold))
-
+                                                    .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+                                                Image(systemName: "gamecontroller.fill")
+                                                    .foregroundStyle(Color(UIColor(hex: "#CCB35A")))
+                                                    .font(.title)
                                             }
-                                            .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.2 : 0.25), height: g.size.height * (UIDevice.current.userInterfaceIdiom == .pad ? 0.18 : 0.21))
-
                                         }
+
                                         NavigationLink {
                                             ShopView(gameData: gameData, gameViewModel: gameViewModel)
                                         } label: {
                                             ZStack{
-                                                Image("buttonBG")
+                                                Image("card")
                                                     .resizable()
                                                     .scaledToFit()
-                                                    .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.2 : 0.25), height: g.size.height * (UIDevice.current.userInterfaceIdiom == .pad ? 0.18 : 0.21))
-                                                    Text("SHOP")
-                                                        .textCase(.uppercase)
-                                                        .foregroundStyle(Color(UIColor(hex: "#DDB355")))
-                                                        .font(.title.weight(.bold))
-
+                                                    .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+                                                Image(systemName: "cart.fill")
+                                                    .foregroundStyle(Color(UIColor(hex: "#CCB35A")))
+                                                    .font(.title)
                                             }
-                                            .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.2 : 0.25), height: g.size.height * (UIDevice.current.userInterfaceIdiom == .pad ? 0.18 : 0.21))
+                                        }
+
+                                        
+                                        
+                                    }
+                                    
+                                    
+                                    NavigationLink {
+                                        LevelView(gameData: gameData, gameViewModel: gameViewModel)
+                                    } label: {
+                                        ZStack{
+                                            Image("image")
+                                                .resizable()
+                                                .scaledToFit()
+                                                .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.45 : 0.48), height: g.size.height * (UIDevice.current.userInterfaceIdiom == .pad ? 0.45 : 0.55))
+
+                                                Text("play")
+                                                    .textCase(.uppercase)
+                                                    .foregroundStyle(.white)
+                                                    .font(.largeTitle.weight(.bold))
+                                                    .padding(.top, g.size.height * 0.2)
 
                                         }
+
                                     }
+                                    
+                                    VStack{
+                                        NavigationLink {
+                                            AchievementsView(gameData: gameData, gameViewModel: gameViewModel)
+                                        } label: {
+                                            ZStack{
+                                                Image("card")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+                                                Image(systemName: "trophy.fill")
+                                                    .foregroundStyle(Color(UIColor(hex: "#CCB35A")))
+                                                    .font(.title)
+                                            }
+                                        }
+                                        NavigationLink {
+                                            DailyTasksView(gameData: gameData, gameViewModel: gameViewModel)
+                                        } label: {
+                                            ZStack{
+                                                Image("card")
+                                                    .resizable()
+                                                    .scaledToFit()
+                                                    .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+                                                Image(systemName: "calendar")
+                                                    .foregroundStyle(Color(UIColor(hex: "#CCB35A")))
+                                                    .font(.title)
+                                            }
+                                        }
+
+                                    }
+                                    
                                 }
-                                
+                                .frame(width: g.size.width * 0.4)
 
                             }
                             .frame(width: g.size.width * (UIDevice.current.userInterfaceIdiom == .pad ? 0.5 : 0.6), height: g.size.height * 0.9)
@@ -115,33 +166,18 @@ struct MainMenuView: View {
                     }
                     .overlay(
                         NavigationLink {
-                            MiniGamesView(gameData: gameData, gameViewModel: gameViewModel)
-                        } label: {
-                            Image("miniGames")
-                                .resizable()
-                                .scaledToFit()
-                                .frame(width: g.size.width * 0.12, height: g.size.width * 0.12)
-
-                        }
-                            .padding(.leading, g.size.height * 0.1)
-
-                        ,alignment: .bottomLeading
-
-                    )
-                    .overlay(
-                        NavigationLink {
                             SettingsView(gameData: gameData, gameViewModel: gameViewModel)
                         } label: {
-                            Image(systemName: "gear")
-                                .foregroundStyle(.white)
-                                .font(.title)
-                                .padding(6)
-                                .background(
-                                    Circle()
-                                        .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                    
-                                )
-                            
+                            ZStack{
+                                Image("card")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+                                Image(systemName: "gear")
+                                    .foregroundStyle(Color(UIColor(hex: "#CCB35A")))
+                                    .font(.title)
+                            }
+
                             
                         }
                             .padding(.top, g.size.height * 0.1)
@@ -150,32 +186,6 @@ struct MainMenuView: View {
 
                         ,alignment: .topTrailing
                     )
-                    .overlay(
-                        ZStack{
-                            Rectangle()
-                                .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                .frame(width: g.size.width * 0.15, height: g.size.height * 0.1)
-                                
-                            HStack(spacing: 5){
-                                Image("coin")
-                                    .resizable()
-                                    .scaledToFit()
-                                    .frame(width: g.size.width * 0.07, height: g.size.width * 0.07)
-                                
-                                Text("\(gameData.coins)")
-                                    .foregroundStyle(.white)
-                                    .font(.title3.weight(.bold))
-                            }
-                            .padding(.trailing, isiPad ? g.size.width * 0.1 : g.size.width * 0.05)
-                        }
-                            .padding(.top, g.size.height * 0.1)
-
-                            .frame(width: g.size.width * 0.3, height: g.size.height * 0.1)
-                        
-                        ,alignment: .topLeading
-                        
-                    )
-                    //                    .frame(width: g.size.width * 0.9, height: g.size.height * 0.9)
                     
                     .frame(width: g.size.width, height: g.size.height)
 
@@ -185,15 +195,6 @@ struct MainMenuView: View {
 
             }
 
-
-            
-        } else {
-            NavigationView {
-                ZStack(alignment: .bottom) {
-                    
-                }
-            }
-        }
     }
     
 }

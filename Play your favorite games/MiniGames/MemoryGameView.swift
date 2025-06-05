@@ -19,268 +19,192 @@ struct MemoryGameView: View {
 
     var body: some View {
         GeometryReader { g in
-            ZStack{
+            ZStack {
                 Image(gameViewModel.backgroundImage)
                     .resizable()
                     .ignoresSafeArea()
+                    .blur(radius: 5)
 
-                
-                mainContent(g: g)
-
-            }
-            
-            .frame(width: g.size.width , height: g.size.height)
-
-
-        }
-
-        .navigationBarBackButtonHidden()
-    }
-    
-        // MARK: - Subviews
-
-    private func mainContent(g: GeometryProxy) -> some View {
-        let isIPad = UIDevice.current.userInterfaceIdiom == .pad
-
-        return VStack{
-
-            ZStack{
-                Image("bar")
-                    .resizable()
-                    .scaledToFill()
-                    .frame(width:  g.size.width * 0.8, height: g.size.height * 0.7)
-                if game.lostMatch {
-                    VStack(){
-                        livesView(geometry: g)
-                        Text("CARDS ARE NOT MACTHED")
-                            .foregroundStyle(Color(UIColor(hex: "#FFF6E2")))
-                            .font(.title)
-                        HStack{
-                            Button {
-                                game.restartGame()
-                            } label: {
-                                ZStack{
-                                    Image("buttonBG")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: g.size.width * 0.38, height: g.size.height * 0.2)
-                                    Text("RETRY")
-                                        .font(.title)
-                                        .foregroundStyle(Color(UIColor(hex: "#FAAD08")))
-                                }
-
-                            }
-
+                VStack {
+                    // Header
+                    HStack(spacing: 0) {
+                        Button {
+                            dismiss()
+                        } label: {
+                            Image("arrow")
+                                .resizable()
+                                .scaledToFit()
+                                .rotationEffect(Angle(degrees: -90))
+                                .frame(width: g.size.width * 0.15, height: g.size.height * 0.15)
                         }
-                    }
-                    .frame(width: g.size.width * 0.6, height: g.size.height * 0.55)
-
-                } else if game.allMatchesFound{
-                    VStack(){
-                        Text("ALL CARDS ARE MATCHED")
-                            .foregroundStyle(.white)
-                            .font(.title)
-                        HStack{
-                            ZStack{
-                                Rectangle()
-                                    .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
-                                    .frame(width: g.size.width * 0.18, height: g.size.height * 0.12)
-                                    
-                                HStack(spacing: 5){
-                                    Image("coin")
-                                        .resizable()
-                                        .scaledToFit()
-                                        .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
-                                    
-                                    Text("+20")
-                                        .foregroundStyle(.white)
-                                        .font(.title2.weight(.bold))
-                                }
-                                .padding(.trailing, g.size.width * 0.05)
-                            }
-
-                                .frame(width: g.size.width * 0.3, height: g.size.height * 0.1)
-
-                        }
-                    }
-                    .frame(width: g.size.width * 0.6, height: g.size.height * 0.55)
-
-                } else{
-                    VStack{
-                        livesView(geometry: g)
-                        cardsGridView(geometry: g)
-                            .scaleEffect(isIPad ? 0.8 : 1.0)
-                    }
-                    .frame(width: g.size.width * 0.6, height: g.size.height * 0.5)
-
-                }
-            }
-            .overlay(
-                Button{
-                    dismiss()
-                } label: {
-                    Image(systemName: "xmark")
-                        .foregroundStyle(.white)
-                        .font(.title.weight(.bold))
-                        .padding(5)
-                        .background {
-                            Circle()
-                                .foregroundStyle(.red)
-                        }
-                }
-                
-                ,alignment: .topTrailing
-            )
-
-        }
-        .frame(height: g.size.height * 0.9)
-
-
-    }
-    
-    
-    private func livesView(geometry: GeometryProxy) -> some View {
-        HStack(spacing: 0) {
-            Text("Match the cards")
-                .textCase(.uppercase)
-                .foregroundStyle(.yellow)
-                .font(.headline)
-                .hLeading()
-
-            HStack(spacing: 8){
-                ForEach(0..<5, id: \.self) { index in
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 10)
-                            .foregroundStyle(.white)
-                            .opacity(0.5)
-                            .frame(width: geometry.size.width * 0.04, height: geometry.size.width * 0.04)
-                        Image(systemName: "xmark")
-                            .font(.title.weight(.bold))
-                            .foregroundStyle(index < remainingAttempts ? .gray : .red)
-                    }
-                }
-            }
-
-        }
-        .frame(width: geometry.size.width * 0.5, height: geometry.size.height * 0.2)
-
-    }
-    
-    private func cardsGridView(geometry: GeometryProxy) -> some View {
-        VStack {
-            let columns = [GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible()), GridItem(.flexible())]
-            
-            LazyVGrid(columns: columns, spacing: 4) {
-                ForEach(Array(game.cards.enumerated()), id: \.element.id) { index, card in
-                    CardView(card: card, geometry: geometry)
-                        .onTapGesture {
-                            handleCardTap(index)
-                        }
-                }
-            }
-        }
-        .frame(width: geometry.size.width * 0.5, height: geometry.size.height * 0.4)
-    }
-
-
-    private func overlayViews(g: GeometryProxy) -> some View {
-        Group {
-            if game.lostMatch {
-                lostMatchView(g: g)
-            } else if game.allMatchesFound {
-                ZStack{
-                    Color.black
-                        .opacity(0.5)
-                        .ignoresSafeArea()
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 25)
-                            .frame(width: g.size.width * 0.7, height: g.size.height * 0.5)
-                        VStack{
-                            Text("You Win")
+                        
+                        Spacer()
+                        
+                        if game.allMatchesFound {
+                            Text("ALL MATCHES ARE FOUND")
                                 .foregroundStyle(.white)
-                                .font(.system(size: 34, weight: .bold))
-                                .padding()
-                            Text("Your Score:")
+                                .font(.title.weight(.bold))
+
+                        } else if game.lostMatch {
+                            Text("MATCHES ARE INCORRECT")
                                 .foregroundStyle(.white)
-                                .font(.callout)
-                            HStack{
-                                Text("20")
-                                    .foregroundStyle(.white)
-                                    .font(.system(size: 28, weight: .bold))
+                                .font(.title.weight(.bold))
+
+                        } else {
+                            Text("FIND A MATCH")
+                                .foregroundStyle(.white)
+                                .font(.title.weight(.bold))
+                        }
+                        Spacer()
+                        
+                        ZStack {
+                            Image("buttonBG")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: g.size.width * 0.17, height: g.size.height * 0.17)
+                            
+                            HStack(spacing: 5) {
                                 Image("coin")
                                     .resizable()
                                     .scaledToFit()
-                                    .frame(width: g.size.width * 0.15, height: g.size.width * 0.15)
-                            }
-                            .frame(width: g.size.width * 0.5)
-                            Button {
-                                dismiss()
-                                gameData.addCoins(20)
-                            } label: {
-                                ZStack{
-                                    Capsule()
-                                        .foregroundStyle(.white)
-                                        .frame(width: g.size.width * 0.6, height: g.size.width * 0.15)
-                                    Text("Claim")
-                                        .foregroundStyle(.black)
-                                        .font(.system(size: 24, weight: .bold))
-                                    
-                                    
-                                }
+                                    .frame(width: g.size.width * 0.03, height: g.size.width * 0.03)
                                 
+                                Text("\(gameData.coins)")
+                                    .foregroundStyle(.white)
+                                    .font(.title3.weight(.bold))
                             }
-                            
-                            
-                            
+                            .frame(width: g.size.width * 0.17, height: g.size.height * 0.17)
                         }
-                        .frame(width: g.size.width * 0.7, height: g.size.height * 0.5)
-                        
                     }
+                    .padding(.top, g.size.height * 0.1)
+                    .frame(width: g.size.width, height: g.size.height * 0.1)
+                    
+                    // Game stats
+                    HStack {
+                        ZStack {
+                            Image("back")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: g.size.width * 0.15)
+                            
+                            Text("Tries: \(remainingAttempts)")
+                                .foregroundStyle(.white)
+                                .font(.headline.weight(.bold))
+                                .padding(.top, g.size.height * 0.05)
+                        }
+                        
+                        Spacer()
+                        
+                        ZStack {
+                            Image("back")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: g.size.width * 0.15)
+                            
+                            Text("Time: \(timeLeft)")
+                                .foregroundStyle(.white)
+                                .font(.headline.weight(.bold))
+                                .padding(.top, g.size.height * 0.05)
+
+                        }
+                    }
+                    .padding(.horizontal, 20)
+                    .frame(width: g.size.width * 0.6)
+                    
+                    Spacer()
+                    
+                    // Game content
+                    if game.lostMatch {
+                        lostMatchView(g: g)
+                    } else if game.allMatchesFound {
+                        winView(g: g)
+                    } else {
+                        cardsGridView(g: g)
+                    }
+                    
+                    Spacer()
                 }
-
-
             }
         }
+        .navigationBarBackButtonHidden()
+    }
+    
+    // MARK: - Subviews
+    
+    private func cardsGridView(g: GeometryProxy) -> some View {
+        VStack(spacing: 10) {
+            // 2 rows with 6 columns each
+            ForEach(0..<2, id: \.self) { row in
+                HStack(spacing: 10) {
+                    ForEach(0..<6, id: \.self) { col in
+                        let index = row * 6 + col
+                        if index < game.cards.count {
+                            CardView(card: game.cards[index], geometry: g)
+                                .onTapGesture {
+                                    handleCardTap(index)
+                                }
+                        }
+                    }
+                }
+            }
+        }
+        .frame(width: g.size.width * 0.9)
+    }
+    
+    private func winView(g: GeometryProxy) -> some View {
+        VStack {
+            Text("ALL CARDS ARE MATCHED")
+                .foregroundStyle(.white)
+                .font(.title)
+            
+            HStack {
+                ZStack {
+                    Rectangle()
+                        .foregroundStyle(Color(UIColor(hex: "#4B2A28")))
+                        .frame(width: g.size.width * 0.18, height: g.size.height * 0.12)
+                    
+                    HStack(spacing: 5) {
+                        Image("coin")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: g.size.width * 0.1, height: g.size.width * 0.1)
+                        
+                        Text("+20")
+                            .foregroundStyle(.white)
+                            .font(.title2.weight(.bold))
+                    }
+                    .padding(.trailing, g.size.width * 0.05)
+                }
+                .frame(width: g.size.width * 0.3, height: g.size.height * 0.1)
+            }
+        }
+        .frame(width: g.size.width * 0.6, height: g.size.height * 0.55)
     }
     
     private func lostMatchView(g: GeometryProxy) -> some View {
-        ZStack{
-            Color.black
-                .opacity(0.5)
-                .ignoresSafeArea()
-            ZStack{
-                RoundedRectangle(cornerRadius: 25)
-                    .frame(width: g.size.width * 0.7, height: g.size.height * 0.7)
-                VStack{
-                    Text("Game Over")
-                        .foregroundStyle(.white)
-                        .font(.system(size: 34, weight: .bold))
-                        .padding()
-                    Button {
-                        dismiss()
-                        
-                    } label: {
-                        ZStack{
-                            Capsule()
-                                .foregroundStyle(.white)
-                                .frame(width: g.size.width * 0.6, height: g.size.width * 0.15)
-                            Text("Home")
-                                .foregroundStyle(.black)
-                                .font(.system(size: 24, weight: .bold))
-                            
-                            
-                        }
-                        
+        VStack {
+            Text("CARDS ARE NOT MATCHED")
+                .foregroundStyle(Color(UIColor(hex: "#FFF6E2")))
+                .font(.title)
+            
+            HStack {
+                Button {
+                    game.restartGame()
+                    remainingAttempts = 5
+                } label: {
+                    ZStack {
+                        Image("buttonBG")
+                            .resizable()
+                            .scaledToFit()
+                            .frame(width: g.size.width * 0.38, height: g.size.height * 0.2)
+                        Text("RETRY")
+                            .font(.title)
+                            .foregroundStyle(Color(UIColor(hex: "#FAAD08")))
                     }
-                    
-                    
-                    
                 }
-                .frame(width: g.size.width * 0.7, height: g.size.height * 0.3)
-                
             }
         }
-
+        .frame(width: g.size.width * 0.6, height: g.size.height * 0.55)
     }
     
     // MARK: - Game Logic
@@ -299,7 +223,6 @@ struct MemoryGameView: View {
         checkGameEnd()
     }
     
-    
     private func checkGameEnd() {
         if game.cards.allSatisfy({ $0.isMatched }) {
             game.allMatchesFound = true
@@ -308,45 +231,34 @@ struct MemoryGameView: View {
             game.lostMatch = true
         }
     }
-    
 }
-
 
 struct CardView: View {
     var card: Card
     @State private var flipped = false
     @State private var rotation = 0.0
     @State private var scale = 1.0
-    @State var geometry: GeometryProxy
-    
+    var geometry: GeometryProxy
     
     var body: some View {
         ZStack {
             Group {
                 if flipped {
-                    // Лицевая сторона карточки (градиент + изображение)
-                    ZStack{
-                        RoundedRectangle(cornerRadius: 8)
-                            .foregroundStyle(Color(UIColor(hex: "#FDF6E4")))
-                            .frame(width: geometry.size.width * 0.065, height: geometry.size.width * 0.065)
-                        Image(card.imageName)
-                            .resizable()
-                            .scaledToFit()
-                            .frame(width: geometry.size.width * 0.065, height: geometry.size.width * 0.065)
-
-                    }
-                    .frame(width: geometry.size.width * 0.065, height: geometry.size.width * 0.065)
-
-
+                    // Front side of the card (image)
+                    Image(card.imageName)
+                        .resizable()
+                        .scaledToFit()
                 } else {
-                    RoundedRectangle(cornerRadius: 8)
-                        .foregroundStyle(Color(UIColor(hex: "#FDF6E4")))
-                        .frame(width: geometry.size.width * 0.065, height: geometry.size.width * 0.065)
+                    // Back side of the card
+                    Image("card")
+                        .resizable()
+                        .scaledToFit()
                 }
             }
             .rotation3DEffect(.degrees(rotation), axis: (x: 0, y: 1, z: 0))
             .scaleEffect(scale)
         }
+        .frame(width: geometry.size.width * 0.12, height: geometry.size.width * 0.12)
         .onChange(of: card.isFlipped || card.isMatched) { newValue in
             flipCard(to: newValue)
         }
@@ -365,37 +277,5 @@ struct CardView: View {
                 scale = 1.0
             }
         }
-    }
-}
-
-
-// В cardsGridView измените расчет размеров:
-extension AnyTransition {
-    static var flipFromLeft: AnyTransition {
-        .modifier(
-            active: FlipEffect(angle: 90),
-            identity: FlipEffect(angle: 0)
-        )
-    }
-}
-
-struct FlipEffect: ViewModifier {
-    var angle: Double
-
-    func body(content: Content) -> some View {
-        content
-            .rotation3DEffect(
-                .degrees(angle),
-                axis: (x: 0, y: 1, z: 0)
-            )
-            .animation(.easeInOut(duration: 0.3), value: angle)
-    }
-}
-
-
-extension View {
-    func hLeading() -> some View {
-        self
-            .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
